@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:context="http://www.springframework.org/schema/context" 
+	   xmlns:tx="http://www.springframework.org/schema/tx"
+	   xmlns:util="http://www.springframework.org/schema/util"
+	   xsi:schemaLocation="
+	   		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+			http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+			http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+			http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd"		
+	   default-lazy-init="true">
+
+	<description>Spring configruation</description>
+  	
+  	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+  		<property name="locations">
+  			<list>
+  				<value>classpath:admin.properties</value>
+  			</list>
+  		</property>
+  	</bean>
+  	
+	<context:annotation-config />
+	
+	<context:component-scan base-package="org.starworker.cms.admin.**.service">
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+		<context:exclude-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+	</context:component-scan>
+	
+	<bean id="txnManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+  		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<tx:annotation-driven  transaction-manager="txnManager" />
+	
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="org.starworker.cms.admin.**.repository" />
+	</bean>
+
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg index="0" ref="sqlSessionFactory" />
+	</bean>
+	
+   	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+  		<property name="dataSource" ref="dataSource" />
+  		<property name="typeAliasesPackage" value="org.starworker.cms.admin.**.domain" />
+  		<property name="mapperLocations" value="classpath*:mapper/**/*.xml" />
+	</bean>
+
+ 	<bean id="dataSource" class="com.jolbox.bonecp.BoneCPDataSource" destroy-method="close">
+		<property name="driverClass" value="${jdbc.driver.class}" />
+		<property name="jdbcUrl" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<property name="partitionCount" value="${bonecp.partitionCount}" />
+		<property name="minConnectionsPerPartition" value="${bonecp.minConnections}" />
+		<property name="maxConnectionsPerPartition" value="${bonecp.maxConnections}" />
+		<property name="acquireIncrement" value="${bonecp.acquireIncrement}" />
+		<property name="statementsCacheSize" value="${bonecp.statementCaches}" />
+		<property name="disableConnectionTracking" value="${bonecp.disableTracking}" />
+		<property name="queryExecuteTimeLimitInMs" value="${bonecp.queryLimitTime}" />
+		<property name="idleConnectionTestPeriodInMinutes" value="60" />
+		<property name="idleMaxAgeInMinutes" value="240" />
+		<property name="defaultAutoCommit" value="false" />
+	</bean>
+</beans>

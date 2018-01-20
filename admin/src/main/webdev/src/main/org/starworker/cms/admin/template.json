@@ -1,0 +1,8 @@
+﻿{
+	"admin": {
+		"menu": {
+			"id": "menuManage",
+			"title": "菜单管理"
+		}
+	}
+}
