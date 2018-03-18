@@ -1,0 +1,18 @@
+﻿<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="description" content="<%= i18n.description %>" />
+<meta name="keywords" content="<%= i18n.keywords %>" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<% 
+	var asset;
+	for(let i = 0; i < assets.length; i++) {
+	  asset = assets[i];
+%>
+<%  if(asset.lastIndexOf(".js") > -1) {%>
+		<script type="text/javascript" src="<%= asset %>"></script>
+<%} else if(asset.lastIndexOf(".css") > -1) {%>
+		<link href="<%= asset %>" rel="stylesheet" />
+<%}%>
+<%}%>
+
+<link href="../../css/cms.min.css" rel="stylesheet" />

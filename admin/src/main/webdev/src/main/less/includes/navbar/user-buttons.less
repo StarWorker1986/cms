@@ -1,0 +1,142 @@
+.cms-nav {
+    height: 100%;
+    margin: 0 !important;
+
+    > li {
+        line-height: @navbar-min-height;
+        height: @navbar-min-height;
+        border-left: 1px solid #E1E1E1;
+        padding: 0;
+        position: relative;
+        float: left;
+
+        &:first-child {
+            border-left-width: 0;
+        }
+
+        > a {
+            background-color: @cms-nav-default;
+            color: #FFF;
+            display: block;
+            line-height: inherit;
+            text-align: center;
+            height: 100%;
+            width: auto;
+            min-width: 50px;
+            padding: 0 8px;
+            position: relative;
+
+            > .@{icon} {
+                display: inline-block;
+                font-size: @font-size-navbar-user-button-icon;
+                color: #FFF;
+                text-align: center;
+                width: 20px;
+            }
+
+            > .badge {
+                position: relative;
+                top: -4px;
+                left: 2px;
+                padding-right: 5px;
+                padding-left: 5px;
+            }
+        }
+
+        > a:hover, > a:focus, &.open > a {
+            background-color: desaturate(darken(@cms-nav-default, 4%), 4%);
+            color: #FFF;
+        }
+
+        .cms-nav-color(@color) {
+            @cms-nav-class: ~ `"cms-nav-@{color}"`;
+            @cms-nav-bg: ~ `"cms-nav-@{color}"`;
+            @cms-nav-cl: @@cms-nav-bg;
+
+            &.@{color}
+
+            > a {
+                background-color: @cms-nav-cl;
+            }
+
+            &.@{color}
+
+            > a:hover, &.@{color}
+
+            > a:focus, &.open.@{color}
+
+            > a {
+                background-color: desaturate(darken(@cms-nav-cl, 4%), 4%);
+            }
+        }
+
+        .cms-nav-color(~"grey");
+        .cms-nav-color(~"purple");
+        .cms-nav-color(~"green");
+        .cms-nav-color(~"light-blue");
+        .cms-nav-color(~"light-blue2");
+        .cms-nav-color(~"red");
+        .cms-nav-color(~"light-green");
+        .cms-nav-color(~"light-purple");
+        .cms-nav-color(~"light-orange");
+        .cms-nav-color(~"light-pink");
+        .cms-nav-color(~"dark");
+        .cms-nav-color(~"white-opaque");
+        .cms-nav-color(~"dark-opaque");
+
+        &.transparent > a {
+            background-color: transparent;
+        }
+
+        &.transparent > a:hover, &.transparent > a:focus, &.open.transparent > a {
+            background-color: rgba(0,0,0,0.1);
+        }
+
+        &.light-10 > a {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        &.light-10 > a:hover, &.light-10 > a:focus, &.open.light-10 > a {
+            background-color: rgba(255,255,255,0.2);
+        }
+
+        &.dark-10 > a {
+            background-color: rgba(0,0,0,0.1);
+        }
+
+        &.dark-10 > a:hover, &.dark-10 > a:focus, &.open.dark-10 > a {
+            background-color: rgba(0,0,0,0.2);
+        }
+
+        .marginX (@index) when (@index > 0) {
+            &.margin-@{index} {
+                margin-left: unit(@index,px);
+            }
+
+            .marginX(@index - 1);
+        }
+        .marginX(4);
+
+        &.no-border {
+            border-width: 0 !important;
+        }
+
+        .dropdown-menu {
+            z-index: @zindex-navbar-fixed + 1;
+        }
+    }
+
+    .nav-user-photo {
+        margin: -4px 8px 0 0;
+        border-radius: 100%;
+        border: 2px solid #FFF;
+        max-width: 40px;
+    }
+
+
+    li.dropdown-footer a .@{icon} {
+        display: inline-block;
+        width: 1.25em;
+        text-align: center;
+    }
+}
