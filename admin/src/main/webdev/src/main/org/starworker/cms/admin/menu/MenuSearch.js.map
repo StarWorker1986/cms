@@ -1,0 +1,1 @@
+{"version":3,"sources":["MenuSearch.jsx"],"names":["ReactDOM","render","document","getElementById"],"mappings":";;AAACA,SAASC,MAAT,CACC;AAAA;AAAA;AAAA;AAAA,CADD,EAECC,SAASC,cAAT,CAAwB,YAAxB,CAFD","file":"MenuSearch.js","sourcesContent":["﻿ReactDOM.render(\r\n  <h1>Hello, world!</h1>,\r\n  document.getElementById(\"menuManage\")\r\n);"]}

@@ -2,21 +2,25 @@
 	"jquery": {
 		"files": ["jquery.min.js"],
 		"version": "3.2.1",
-		"src": "dist"
+		"cwd": "dist"
 	},
 	"bootstrap": {
 		"files": ["css/bootstrap-theme.min.css", "css/bootstrap.min.css", "js/bootstrap.min.js"],
 		"version": "3.3.7",
-		"src": "dist"
+		"cwd": "dist"
+	},
+	"font-awesome": {
+		"files": ["fonts/fontawesome-webfont.eot", "fonts/fontawesome-webfont.svg", "fonts/fontawesome-webfont.ttf", "fonts/fontawesome-webfont.woff", "fonts/fontawesome-webfont.woff2", "fonts/FontAwesome.otf", "css/font-awesome.min.css"],
+		"version": "4.7.0"
 	},
 	"react": {
 		"files": ["react.production.min.js"],
 		"version": "16.0.0",
-		"src": "umd"
+		"cwd": "umd"
 	},
 	"react-dom": {
 		"files": ["react-dom.production.min.js"],
 		"version": "16.0.0",
-		"src": "umd"
+		"cwd": "umd"
 	}
 }

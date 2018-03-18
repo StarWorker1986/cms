@@ -10,6 +10,7 @@ module.exports = function (grunt) {
     const nodePath = "node_modules";
     const lessPath = "src/main/less";
     const ejsPath = "src/main/ejs";
+    const iconPath = "src/main/icons";
     const pattern = /^((?:[\w]+\/)+)*([\w]+)(\.min\.js)$/;
     const assetsPattern = /(\.css|\.js)$/;
     const region = "zh-CN";
@@ -50,6 +51,13 @@ module.exports = function (grunt) {
             src = [nodePath, key, file].join('/');
             copy[dest] = src;
         });
+    }
+
+    copy["icons"] = {
+        expand: true,
+        cwd: iconPath,
+        src: "*.png",
+        dest: "build/icons"
     }
 
     // Force use of Unix newlines
@@ -109,7 +117,7 @@ module.exports = function (grunt) {
                 expand: true,
                 cwd: lessPath,
                 src: "*.css",
-                dest: "<%= cssmin.file.cwd %>",
+                dest: "build/css",
                 ext: ".min.css"
             }
         },
@@ -147,6 +155,6 @@ module.exports = function (grunt) {
     });
 
     require("load-grunt-tasks")(grunt, { scope: "devDependencies" });
-    grunt.registerTask("default", ["clean", "concat"]);
+    grunt.registerTask("default", ["clean", "less", "cssmin", "copy", "ejs"]);
     //grunt.registerTask("test", ["qunit"]);
 }
