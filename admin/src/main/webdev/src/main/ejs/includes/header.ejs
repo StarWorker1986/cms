@@ -4,15 +4,27 @@
 <meta name="keywords" content="<%= i18n.keywords %>" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <% 
-	var asset;
-	for(let i = 0; i < assets.length; i++) {
-	  asset = assets[i];
+	var asset = null, props = null;
+	for(let i = 0; i < jsAssets.length; i++) {
+	  props = [];
+    asset = jsAssets[i];
+    for(var item in asset) {
+      props.push(item + '="' + asset[item] + '"');
+    }
 %>
-<%  if(asset.lastIndexOf(".js") > -1) {%>
-		<script type="text/javascript" src="<%= asset %>"></script>
-<%} else if(asset.lastIndexOf(".css") > -1) {%>
-		<link href="<%= asset %>" rel="stylesheet" />
-<%}%>
-<%}%>
-
+<script type="text/javascript" <%- props.join(' ') %>></script>
+<%
+  }
+  
+  for(let i = 0; i < cssAssets.length; i++) {
+	  props = [];
+    asset = cssAssets[i];
+    for(var item in asset) {
+      props.push(item + '="' + asset[item] + '"');
+  }
+%>
+<link rel="stylesheet" <%- props.join(' ') %> />
+<%
+  }
+%>
 <link href="../../css/cms.min.css" rel="stylesheet" />

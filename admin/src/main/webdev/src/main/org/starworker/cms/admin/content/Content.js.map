@@ -1,1 +1,0 @@
-{"version":3,"sources":["Content.jsx"],"names":["Content","x","y"],"mappings":";;;;IAAOA,O,GACN,iBAAYC,CAAZ,EAAeC,CAAf,EAAkB;AAAA;;AACjB,OAAKD,CAAL,GAASA,CAAT;AACM,OAAKC,CAAL,GAASA,CAAT;AACJ,C","file":"Content.js","sourcesContent":["﻿class Content {\r\n\tconstructor(x, y) {\r\n\t\tthis.x = x;\r\n        this.y = y;\r\n   }\r\n}"]}
