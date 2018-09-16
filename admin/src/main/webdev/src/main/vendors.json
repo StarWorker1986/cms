@@ -1,26 +1,42 @@
 ﻿{
 	"jquery": {
-		"files": ["jquery.min.js"],
+		"files": [{ "src": "jquery.min.js" }],
 		"version": "3.2.1",
 		"cwd": "dist"
 	},
 	"bootstrap": {
-		"files": ["css/bootstrap-theme.min.css", "css/bootstrap.min.css", "js/bootstrap.min.js"],
+		"files": [{ "src": "css/bootstrap-theme.min.css"}, { "src": "css/bootstrap.min.css" }, { "src": "js/bootstrap.min.js" }],
 		"version": "3.3.7",
 		"cwd": "dist"
 	},
 	"font-awesome": {
-		"files": ["fonts/fontawesome-webfont.eot", "fonts/fontawesome-webfont.svg", "fonts/fontawesome-webfont.ttf", "fonts/fontawesome-webfont.woff", "fonts/fontawesome-webfont.woff2", "fonts/FontAwesome.otf", "css/font-awesome.min.css"],
+		"files": [{ "src": "fonts/fontawesome-webfont.eot" }, 
+				  { "src": "fonts/fontawesome-webfont.svg" }, 
+				  { "src": "fonts/fontawesome-webfont.ttf" }, 
+				  { "src": "fonts/fontawesome-webfont.woff" }, 
+				  { "src": "fonts/fontawesome-webfont.woff2" }, 
+				  { "src": "fonts/FontAwesome.otf" }, 
+				  { "src": "css/font-awesome.min.css" }],
 		"version": "4.7.0"
 	},
 	"react": {
-		"files": ["react.production.min.js"],
+		"files": [{"src": "react.production.min.js" }],
 		"version": "16.0.0",
 		"cwd": "umd"
 	},
 	"react-dom": {
-		"files": ["react-dom.production.min.js"],
+		"files": [{ "src": "react-dom.production.min.js" }],
 		"version": "16.0.0",
 		"cwd": "umd"
+	},
+	"requirejs": {
+		"files": [{ "src": "require.js" }],
+		"version": "2.3.5"
+	},
+	"jquery-ui": {
+		"files": [{ "widget.js", "src": ["widgets/mouse.js", "data.js", "plugin.js", "safe-active-element.js", "safe-blur.js",
+				    "scroll-parent.js", "version.js", "widgets/draggable.js"], "dest": "jquery-ui.min.js" }],
+		"version": "1.12.1",
+		"cwd": "ui"
 	}
 }

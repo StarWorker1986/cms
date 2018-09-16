@@ -720,6 +720,9 @@ pre.prettyprint {
 .navbar .navbar-brand:focus {
   color: #FFF;
 }
+.navbar .navbar-brand span {
+  margin-left: 4px;
+}
 @media only screen and (min-width: 992px) {
   .navbar-container {
     padding-left: 10px;
@@ -767,7 +770,7 @@ pre.prettyprint {
 .cms-nav > li > a > .badge {
   position: relative;
   top: -4px;
-  left: 2px;
+  left: 4px;
   padding-right: 5px;
   padding-left: 5px;
 }
@@ -1912,6 +1915,9 @@ pre.prettyprint {
 .dropdown-navbar > li.dropdown-footer > a:hover > .cms-icon {
   text-decoration: none;
 }
+.dropdown-navbar > li.dropdown-footer > a > span {
+  margin-right: 4px;
+}
 .dropdown-navbar > li:hover {
   background-color: #F4F9FC !important;
 }
@@ -1985,29 +1991,25 @@ pre.prettyprint {
   padding-left: 0;
   padding-right: 0;
 }
-.dropdown-navbar .msg-photo {
-  margin-right: 6px;
-  max-width: 42px;
-}
-.dropdown-navbar .msg-body {
-  display: inline-block;
+.dropdown-navbar .content-header {
   line-height: 20px;
-  white-space: normal;
-  vertical-align: middle;
-  max-width: 175px;
 }
-.dropdown-navbar .msg-title {
-  display: inline-block;
-  line-height: 14px;
-}
-.dropdown-navbar .msg-time {
-  display: block;
+.dropdown-navbar .content-footer {
+  line-height: 20px;
   font-size: 11px;
   color: #777;
 }
-.dropdown-navbar .msg-time > .cms-icon {
-  font-size: 14px;
-  color: #555;
+.dropdown-navbar .content-footer > span {
+  margin-left: 4px;
+}
+.dropdown-navbar .content-title {
+  display: inline-block;
+  width: 75%;
+  white-space: normal;
+}
+.dropdown-navbar .content-tag {
+  display: inline-block;
+  width: 25%;
 }
 .dropdown-navbar > .dropdown-content {
   padding: 0;
@@ -4503,4 +4505,173 @@ fieldset[disabled] .btn-white.btn-grey.active {
     border-width: 10px 5px;
     right: -6px;
   }
+}
+.sw-scroll {
+  overflow: hidden;
+}
+.scroll-content {
+  position: static;
+  overflow: hidden;
+}
+.scroll-track {
+  position: absolute;
+  top: auto;
+  bottom: auto;
+  right: 0;
+  width: 8px;
+  height: auto;
+  background-color: #E7E7E7;
+  z-index: 99;
+  width: 0;
+  opacity: 0;
+}
+.scroll-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: inherit;
+  background-color: #ACE;
+  background: #bbd4e5;
+}
+.scroll-hz .scroll-track {
+  top: auto;
+  left: auto;
+  right: auto;
+  bottom: 0;
+  height: 8px;
+  width: auto;
+}
+.scroll-hz .scroll-bar {
+  height: inherit;
+  width: auto;
+}
+.scroll-active .scroll-track {
+  -webkit-transition: all .25s ease 0.6s;
+  -o-transition: all .25s ease 0.6s;
+  transition: all .25s ease 0.6s;
+}
+.scroll-active:hover .scroll-track,
+.scroll-active .scroll-track.active,
+.scroll-active .scroll-track:active {
+  width: 8px;
+  opacity: 1;
+  -webkit-transition-duration: 0.15s;
+  transition-duration: 0.15s;
+  -webkit-transition-delay: 0s;
+  transition-delay: 0s;
+}
+.scroll-track.active > .scroll-bar {
+  transition-property: none !important;
+  transition-duration: 0s !important;
+}
+.scroll-margin .scroll-track {
+  right: 1px;
+}
+.scroll-left .scroll-track {
+  right: auto;
+  left: 0;
+}
+.scroll-margin.scroll-left .scroll-track {
+  left: 1px;
+}
+.scroll-top .scroll-track {
+  bottom: auto;
+  top: 0;
+}
+.scroll-margin.scroll-top .scroll-track {
+  top: 1px;
+}
+.scroll-dark .scroll-bar {
+  background-color: rgba(0, 0, 0, 0.25);
+}
+.scroll-dark .scroll-track {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+.scroll-light .scroll-bar {
+  background-color: rgba(0, 0, 0, 0.14);
+}
+.scroll-light .scroll-track {
+  background-color: rgba(0, 0, 0, 0.07);
+}
+.no-track .scroll-track {
+  background-color: transparent;
+}
+.scroll-visible .scroll-track {
+  opacity: 1;
+  width: 8px;
+}
+.scroll-visible.scroll-hz .scroll-track {
+  height: 8px;
+  width: auto;
+}
+.scroll-thin:hover .scroll-track,
+.scroll-thin .scroll-track:active,
+.scroll-thin .scroll-track.active,
+.scroll-thin.scroll-visible .scroll-track {
+  width: 6px;
+}
+.scroll-thin.scroll-hz:hover .scroll-track,
+.scroll-thin.scroll-hz .scroll-track:active,
+.scroll-thin.scroll-hz .scroll-track.active,
+.scroll-thin.scroll-hz.scroll-visible .scroll-track {
+  width: auto;
+  height: 6px;
+}
+.scroll-chrome .scroll-bar {
+  background-color: transparent;
+  width: 11px;
+}
+.scroll-chrome .scroll-bar:before {
+  display: block;
+  content: "";
+  position: absolute;
+  top: 1px;
+  bottom: 3px;
+  left: 1px;
+  right: 1px;
+  background-color: #D9D9D9;
+  border: 1px solid #BBB;
+  border-radius: 1px;
+}
+.scroll-chrome .scroll-track {
+  width: 12px !important;
+  background-color: #F2F2F2;
+  border: 1px solid;
+  border-width: 1px 0 1px 1px;
+  border-color: #E6E6E6 transparent #E6E6E6 #DBDBDB;
+}
+.scroll-chrome .scroll-track:hover .scroll-bar:before {
+  background-color: #C0C0C0;
+  border-color: #A6A6A6;
+}
+.scroll-chrome .scroll-track.active .scroll-bar:before {
+  background-color: #A9A9A9;
+  border-color: #8B8B8B;
+}
+.nav-wrap + .scroll-active .scroll-track {
+  width: 8px;
+}
+.nav-scroll.scroll-active .scroll-track {
+  width: 8px;
+  right: 0;
+}
+.nav-wrap:hover + .scroll-active .scroll-track,
+.nav-scroll.scroll-active:hover .scroll-track {
+  width: 8px;
+  opacity: 1;
+  -webkit-transition-duration: 0.15s;
+  transition-duration: 0.15s;
+  -webkit-transition-delay: 0s;
+  transition-delay: 0s;
+}
+.nav-scroll.scroll-active:hover .scroll-track {
+  width: 8px;
+}
+.nav-scroll.ace-scroll,
+.nav-scroll.ace-scroll .scroll-content {
+  overflow: visible;
+}
+.nav-scroll.ace-scroll.scroll-active,
+.nav-scroll.ace-scroll.scroll-active .scroll-content {
+  overflow: hidden;
 }
