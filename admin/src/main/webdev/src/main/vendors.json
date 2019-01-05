@@ -34,8 +34,10 @@
 		"version": "2.3.5"
 	},
 	"jquery-ui": {
-		"files": [{ "widget.js", "src": ["widgets/mouse.js", "data.js", "plugin.js", "safe-active-element.js", "safe-blur.js",
-				    "scroll-parent.js", "version.js", "widgets/draggable.js"], "dest": "jquery-ui.min.js" }],
+		"files": [{ "src": ["version.js", "ie.js", "widget.js", "widgets/mouse.js", "data.js", "plugin.js", 
+							"safe-active-element.js", "safe-blur.js", "scroll-parent.js", "widgets/draggable.js", 
+							"widgets/sortable.js"], 
+					"dest": "jquery-ui.min.js" }],
 		"version": "1.12.1",
 		"cwd": "ui"
 	}

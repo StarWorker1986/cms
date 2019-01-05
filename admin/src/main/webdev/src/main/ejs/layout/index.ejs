@@ -1,0 +1,15 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <%- include("includes/header.ejs") %>
+    <title><%= i18n.dashboard.title %></title>
+	<script type="text/javascript">
+		requirejs(["<%- dataMain %>"], function(App) {
+			requirejs(["admin/layout/Dashboard"]);
+		});
+	</script>
+</head>
+<body class="no-skin">
+    <article id="Main"></article>
+</body>
+</html>

@@ -5,15 +5,18 @@ module.exports = function (grunt) {
     const path = require("path");
     const glob = require("glob");
     const json5 = require("json5");
+    const region = "zh-CN";
     const srcPath = "src/main";
     const buildPath = "build";
+    const cssPath = buildPath + "/css";
+    const jsPath = buildPath + "/js";
+    const htmlPath = buildPath + "/html/" + region;
+    const lessPath = srcPath + "/less";
+    const ejsPath = srcPath + "/ejs";
+    const jsxPath = srcPath + "/jsx";
     const nodePath = "node_modules";
-    const lessPath = "src/main/less";
-    const ejsPath = "src/main/ejs";
-    const iconPath = "src/main/icons";
     const pattern = /^((?:[\w]+\/)+)*([\w]+)(\.min\.js)$/;
     const assetsPattern = /(\.css|\.js)$/;
-    const region = "zh-CN";
     const vendors = json5.parse(fs.readFileSync(srcPath + "/vendors.json", "utf8"));
     const i18n = json5.parse(fs.readFileSync(srcPath + "/i18n/" + region + ".json", "utf8"));
 
@@ -21,7 +24,7 @@ module.exports = function (grunt) {
         copy = {}, uglify = {}, vendor = null, dest = null, src = null;
 
     var putAssets = (name, version, file, props) => {
-        src = ["../../vendors", name, version, file].join('/');
+        src = ["../../library", name, version, file].join('/');
         if (file.lastIndexOf(".js") > -1) {
             file = Object.assign({}, { src: src }, props || {});
             jsAssets.push(file);
@@ -41,7 +44,7 @@ module.exports = function (grunt) {
                     putAssets(name, vendor.version, file.src, file.props);
                 }
 
-                dest = [buildPath, "vendors", name, vendor.version, file.src].join('/');
+                dest = [buildPath, "libraries", name, vendor.version, file.src].join('/');
                 file = !!vendor.cwd ? [vendor.cwd, file.src].join('/') : file.src;
                 src = [nodePath, name, file].join('/');
                 copy[dest] = src;
@@ -51,7 +54,7 @@ module.exports = function (grunt) {
                     putAssets(name, vendor.version, file.dest, file.props);
                 }
 
-                dest = [buildPath, "vendors", name, vendor.version, file.dest].join('/');
+                dest = [buildPath, "libraries", name, vendor.version, file.dest].join('/');
                 file.src = file.src.map((src) => {
                     src = !!vendor.cwd ? [vendor.cwd, src].join('/') : src;
                     return [nodePath, name, src].join('/');
@@ -61,14 +64,21 @@ module.exports = function (grunt) {
         });
     }
 
+
     copy["icons"] = {
         expand: true,
-        cwd: iconPath,
+        cwd: srcPath + "/icons",
         src: "*.png",
-        dest: "build/icons"
+        dest: buildPath + "/icons"
     }
-    
-   
+
+    uglify["js"] = {
+        expand: true,
+        cwd: jsPath,
+        src: "**/*.js",
+        ext: ".min.js",
+        dest: jsPath
+    }
 
     // Force use of Unix newlines
     grunt.util.linefeed = '\n';
@@ -90,9 +100,9 @@ module.exports = function (grunt) {
         babel: {
             file: {
                 expand: true,
-                cwd: srcPath,
+                cwd: jsxPath,
                 src: "**/*.jsx",
-                dest: "<%= babel.file.cwd %>",
+                dest: jsPath,
                 ext: ".js"
             }
         },
@@ -104,13 +114,13 @@ module.exports = function (grunt) {
                 i18n: i18n,
                 jsAssets: jsAssets,
                 cssAssets: cssAssets,
-                dataMain: "../../js/org/starworker/cms/admin/App.min"
+                dataMain: "../../js/org/starworker/cms/App.min"
             },
             file: {
                 expand: true,
                 cwd: ejsPath,
                 src: "*.ejs",
-                dest: "build/html/" + region,
+                dest: htmlPath,
                 ext: ".html"
             }
         },
@@ -123,7 +133,7 @@ module.exports = function (grunt) {
                 expand: true,
                 cwd: lessPath,
                 src: "*.less",
-                dest: "<%= less.file.cwd %>",
+                dest: cssPath,
                 ext: ".css"
             }
         },
@@ -135,17 +145,17 @@ module.exports = function (grunt) {
             },
             file: {
                 expand: true,
-                cwd: lessPath,
+                cwd: cssPath,
                 src: "*.css",
-                dest: "build/css",
+                dest: cssPath,
                 ext: ".min.css"
             }
         },
 
-        concat: uglify
+        uglify: uglify
     });
 
     require("load-grunt-tasks")(grunt, { scope: "devDependencies" });
-    grunt.registerTask("default", ["clean", "concat", "less", "cssmin", "copy", "ejs"]);
-    //grunt.registerTask("default", ["babel"]);
+    //grunt.registerTask("default", ["less"]);
+    grunt.registerTask("default", ["babel", "uglify"]);
 }
