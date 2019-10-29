@@ -1,0 +1,113 @@
+﻿.side-navbar {
+    width: 200px;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.side-navbar ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.side-navbar .navbar-container {
+    height: 100%;
+    border-right: solid 1px #aaa;
+}
+
+.menu-list > li {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    background-color: #ccc;
+}
+
+.menu-list > li > a {
+    display: block;
+    height: 30px;
+    line-height: 30px;
+    padding-left: 7px;
+    text-shadow: none !important;
+    font-size: 75%;
+    text-decoration: none;
+    color: #fff;
+    border-top: solid 1px #888;
+    background-color: #999;
+}
+
+.menu-list > li > a.collapsed {
+    background-color: #aaa;
+}
+
+.menu-list > li > a:hover {
+    background-color: #999;
+}
+
+.menu-list > li > a:before {
+	position: absolute;
+    top: 0;
+	left: 0;
+	z-index: 1;
+    display: none;
+    width: 3px;
+    height: 30px;
+	content: "";
+	overflow: hidden;
+	background-color:#ac2925;
+ }
+
+.menu-list > li > a:before {
+	display: block; 
+ }
+
+.menu-list > li > a.collapsed:before {
+    display: none;
+}
+
+.menu-list > li > a:hover:before {
+    display: block;
+}
+
+.menu-list > li > a > .menu-icon {
+    display: inline-block;
+    min-width: 30px;
+    margin-right: 2px;
+    text-align: center;
+    vertical-align: sub;
+    font-size: 140%;
+}
+
+.menu-list > li > a > .menu-arrow {
+    display: inline-block;
+    float: right;
+    min-width: 14px;
+    margin-top: 6px;
+    margin-right: 4px;
+    text-align: center;
+    font-size: 140%;
+}
+
+.menu-list > li > a > .fa-angle-down {
+    display: none;
+}
+
+.menu-list > li > a.collapsed > .fa-angle-up {
+    display: none;
+}
+
+.menu-list > li > a.collapsed > .fa-angle-down {
+    display: block;
+}
+
+.menu-list > li:last-child > a {
+    border-bottom: solid 1px #888;
+}
+
+.menu-list > li .submenu-list {
+    margin-bottom: 10px;
+    border-top: solid 1px #888;
+}
+
+.menu-list > li:last-child .submenu-list {
+    border-top: 0;
+}
