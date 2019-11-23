@@ -1,15 +1,14 @@
 import NodeType from "../dom/NodeType";
 import ArrUtils from "../util/ArrUtils";
-import DomUtils from "../util/DomUtils";
-import Tools from "../util/Tools";
-import { CaretPosition } from "../caret/CaretPosition";
+import DOMUtils from "../util/DomUtils";
+import CaretPosition from "../caret/CaretPosition";
 
 export default class CaretBookmark {
     static create(root, caretPosition) {
         let container, offset, path = [], outputOffset, childNodes, parents;
 
-        container = caretPosition.container();
-        offset = caretPosition.offset();
+        container = caretPosition.container;
+        offset = caretPosition.offset;
         if (NodeType.isText(container)) {
             outputOffset = this.__normalizedTextOffset(container, offset);
         }
@@ -27,7 +26,7 @@ export default class CaretBookmark {
 
         path.push(this.__createPathItem(container));
         parents = this.__parentsUntil(root, container);
-        parents = ArrUtils.filter(parents, Tools.not(NodeType.isBogus));
+        parents = ArrUtils.filter(parents, n => !NodeType.isBogus(n));
         path = path.concat(ArrUtils.map(parents, node => {
             return this.__createPathItem(node);
         }));
@@ -61,12 +60,12 @@ export default class CaretBookmark {
 
         if (!NodeType.isText(container)) {
             if (offset === "after") {
-                offset = DomUtils.nodeIndex(container) + 1;
+                offset = DOMUtils.DOM.nodeIndex(container) + 1;
             }
             else {
-                offset = DomUtils.nodeIndex(container);
+                offset = DOMUtils.DOM.nodeIndex(container);
             }
-            return CaretPosition(container.parentNode, offset);
+            return new CaretPosition(container.parentNode, offset);
         }
 
         return this.__findTextPosition(container, parseInt(offset));
@@ -106,17 +105,11 @@ export default class CaretBookmark {
         return offset;
     }
 
-    static __equals(a) {
-        return function (b) {
-            return a === b;
-        };
-    }
-
     static __normalizedNodeIndex(node) {
-        let nodes, index, numTextFragments;
+        let nodes, index, numTextFragments, equals = a => (b => a === b);
 
         nodes = this.__getChildNodes(this.__normalizedParent(node));
-        index = ArrUtils.findIndex(nodes, this.__equals(node), node);
+        index = ArrUtils.findIndex(nodes, equals(node), node);
         nodes = nodes.slice(0, index + 1);
         numTextFragments = ArrUtils.reduce(nodes, (result, node, i) => {
             if (NodeType.isText(node) && NodeType.isText(nodes[i - 1])) {
@@ -125,13 +118,13 @@ export default class CaretBookmark {
             return result;
         }, 0);
         nodes = ArrUtils.filter(nodes, NodeType.matchNodeNames(node.nodeName));
-        index = ArrUtils.findIndex(nodes, this.__equals(node), node);
+        index = ArrUtils.findIndex(nodes, equals(node), node);
+
         return index - numTextFragments;
     }
 
     static __createPathItem(node) {
         let name;
-
         if (NodeType.isText(node)) {
             name = "text()";
         }
@@ -143,7 +136,6 @@ export default class CaretBookmark {
 
     static __parentsUntil(root, node, predicate) {
         let parents = [];
-
         for (node = node.parentNode; node !== root; node = node.parentNode) {
             if (predicate && predicate(node)) {
                 break;
@@ -155,7 +147,6 @@ export default class CaretBookmark {
 
     static __resolvePathItem(node, name, index) {
         let nodes = this.__getChildNodes(node);
-
         nodes = ArrUtils.filter(nodes, (node, index) => {
             return !NodeType.isText(node) || !NodeType.isText(nodes[index - 1]);
         });
@@ -173,17 +164,21 @@ export default class CaretBookmark {
                 offset = offset - targetOffset;
                 break;
             }
+
             if (!NodeType.isText(node.nextSibling)) {
                 container = node;
                 offset = dataLen;
                 break;
             }
+
             targetOffset += dataLen;
             node = node.nextSibling;
         }
+
         if (NodeType.isText(container) && offset > container.data.length) {
             offset = container.data.length;
         }
-        return CaretPosition(container, offset);
+
+        return new CaretPosition(container, offset);
     }
 }

@@ -16,28 +16,28 @@ export default class ArrUtils {
         return array;
     }
 
-    static each(o, cb, s) {
-        let n, l;
+    static each(obj, fn, scope) {
+        let i, len;
 
-        if (!o) {
+        if (!obj) {
             return 0;
         }
 
-        s = s || o;
+        scope = scope || obj;
 
-        if (o.length !== undefined) {
+        if (obj.length !== undefined) {
             // Indexed arrays, needed for Safari
-            for (n = 0, l = o.length; n < l; n++) {
-                if (cb.call(s, o[n], n, o) === false) {
+            for (i = 0, len = obj.length; i < len; i++) {
+                if (fn.call(scope, obj[i], i, obj) === false) {
                     return 0;
                 }
             }
         }
         else {
             // Hashtables
-            for (n in o) {
-                if (o.hasOwnProperty(n)) {
-                    if (cb.call(s, o[n], n, o) === false) {
+            for (i in obj) {
+                if (obj.hasOwnProperty(i)) {
+                    if (fn.call(scope, obj[i], i, obj) === false) {
                         return 0;
                     }
                 }
@@ -47,29 +47,29 @@ export default class ArrUtils {
         return 1;
     }
 
-    static map(array, callback) {
+    static map(arry, fn) {
         let out = [];
-        this.each(array, (item, index) => {
-            out.push(callback(item, index, array));
+        this.each(arry, (item, index) => {
+            out.push(fn(item, index, arry));
         });
         return out;
     }
 
-    static filter(a, f) {
-        let o = [];
-        this.each(a, (v, index) => {
-            if (!f || f(v, index, a)) {
-                o.push(v);
+    static filter(arry, fn) {
+        let result = [];
+        this.each(arry, (v, index) => {
+            if (!fn || fn(v, index, arry)) {
+                result.push(v);
             }
         });
-        return o;
+        return result;
     }
 
-    static indexOf(a, v) {
-        let i, l;
-        if (a) {
-            for (i = 0, l = a.length; i < l; i++) {
-                if (a[i] === v) {
+    static indexOf(arry, val) {
+        let i, len;
+        if (arry) {
+            for (i = 0, len = a.length; i < len; i++) {
+                if (arry[i] === val) {
                     return i;
                 }
             }

@@ -1,4 +1,3 @@
-import { Fun } from "@ephox/katamari";
 import CaretBookmark from "./CaretBookmark";
 import CaretContainer from "../caret/CaretContainer";
 import CaretPosition from "../caret/CaretPosition";
@@ -6,7 +5,7 @@ import NodeType from "../dom/NodeType";
 import RangeNodes from "../selection/RangeNodes";
 import Zwsp from "../text/Zwsp";
 import Tools from "../util/Tools";
-import { rangeInsertNode } from "../selection/RangeInsertNode";
+import RangeInsertNode from "../selection/RangeInsertNode";
 
 export default class GetBookmark {
     static getBookmark(selection, type, normalized) {
@@ -24,8 +23,8 @@ export default class GetBookmark {
         }
     }
 
-    static getUndoBookmark() {
-        return Fun.curry(this.__getOffsetBookmark, Fun.identity, true);
+    static getUndoBookmark(selection) {
+        return this.__getOffsetBookmark(x => x, true, selection);
     }
 
     static getPersistentBookmark(selection, filled) {
@@ -39,12 +38,12 @@ export default class GetBookmark {
         let rng2 = this.__normalizeTableCellSelection(rng.cloneRange());
         if (!selection.isCollapsed()) {
             rng2.collapse(false);
-            rangeInsertNode(dom, rng2, this.__createBookmarkSpan(dom, id + "_end", filled));
+            RangeInsertNode.rangeInsertNode(dom, rng2, this.__createBookmarkSpan(dom, id + "_end", filled));
         }
 
         rng = this.__normalizeTableCellSelection(rng);
         rng.collapse(true);
-        rangeInsertNode(dom, rng, this.__createBookmarkSpan(dom, id + "_start", filled));
+        RangeInsertNode.rangeInsertNode(dom, rng, this.__createBookmarkSpan(dom, id + "_start", filled));
         selection.moveToBookmark({ id: id, keep: 1 });
 
         return { id: id };
@@ -52,7 +51,6 @@ export default class GetBookmark {
 
     static __getNormalizedTextOffset(trim, container, offset) {
         let node, trimmedOffset;
-
         trimmedOffset = trim(container.data.slice(0, offset)).length;
         for (node = container.previousSibling; node && NodeType.isText(node); node = node.previousSibling) {
             trimmedOffset += trim(node.data).length;
@@ -76,6 +74,7 @@ export default class GetBookmark {
             }
             point.push(dom.nodeIndex(childNodes[offset], normalized) + after);
         }
+
         for (; container && container !== dom.getRoot(); container = container.parentNode) {
             point.push(dom.nodeIndex(container, normalized));
         }
@@ -85,7 +84,6 @@ export default class GetBookmark {
 
     static __getLocation(trim, selection, normalized, rng) {
         let dom = selection.dom, bookmark = {};
-
         bookmark.start = this.__getPoint(dom, trim, normalized, rng, true);
         if (!selection.isCollapsed()) {
             bookmark.end = this.__getPoint(dom, trim, normalized, rng, false);
@@ -105,6 +103,7 @@ export default class GetBookmark {
             }
             count++;
         });
+
         return count;
     }
 
@@ -147,6 +146,7 @@ export default class GetBookmark {
             if (NodeType.isContentEditableFalse(sibling)) {
                 return sibling;
             }
+
             sibling = node.nextSibling;
             if (NodeType.isContentEditableFalse(sibling)) {
                 return sibling;
@@ -171,12 +171,12 @@ export default class GetBookmark {
             name = sibling.tagName;
             return { name: name, index: this.__findIndex(selection.dom, name, sibling) };
         }
+
         return this.__getLocation(trim, selection, normalized, rng);
     }
 
     static __getCaretBookmark(selection) {
         let rng = selection.getRng();
-
         return {
             start: CaretBookmark.create(selection.dom.getRoot(), CaretPosition.fromRangeStart(rng)),
             end: CaretBookmark.create(selection.dom.getRoot(), CaretPosition.fromRangeEnd(rng))

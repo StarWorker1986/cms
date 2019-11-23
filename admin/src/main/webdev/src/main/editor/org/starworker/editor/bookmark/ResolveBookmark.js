@@ -1,12 +1,12 @@
-import { Option, Options } from "@ephox/katamari";
-import Env from "../api/Env";
+import Option from "../util/Option";
+import Env from "../util/Env";
+import ArrUtils from "../util/ArrUtils";
 import CaretBookmark from "./CaretBookmark";
-import { CaretPosition } from "../caret/CaretPosition";
-import NodeType from "../dom/NodeType";
-import Tools from "../api/util/Tools";
-import { getParentCaretContainer } from "../fmt/FormatContainer";
-import Zwsp from "../text/Zwsp";
 import CaretFinder from "../caret/CaretFinder";
+import CaretPosition from "../caret/CaretPosition";
+import CaretContainer from "../caret/CaretContainer";
+import NodeType from "../dom/NodeType";
+import Zwsp from "../text/Zwsp";
 import BookmarkTypes from "./BookmarkTypes";
 
 export default class ResolveBookmark {
@@ -35,7 +35,7 @@ export default class ResolveBookmark {
 
     static __addBogus(dom, node) {
         if (dom.isBlock(node) && !node.innerHTML && !Env.ie) {
-            node.innerHTML = '<br data-mce-bogus="1" />';
+            node.innerHTML = '<br data-editor-bogus="1" />';
         }
         return node;
     }
@@ -45,10 +45,10 @@ export default class ResolveBookmark {
 
         rng = dom.createRng();
         pos = CaretBookmark.resolve(dom.getRoot(), bookmark.start);
-        rng.setStart(pos.container(), pos.offset());
+        rng.setStart(pos.container, pos.offset);
 
         pos = CaretBookmark.resolve(dom.getRoot(), bookmark.end);
-        rng.setEnd(pos.container(), pos.offset());
+        rng.setEnd(pos.container, pos.offset);
 
         return rng;
     }
@@ -66,16 +66,16 @@ export default class ResolveBookmark {
     }
 
     static __tryFindRangePosition(node, rng) {
-        return CaretFinder.lastPositionIn(node).fold(() => { return false; }, (pos) => {
-            rng.setStart(pos.container(), pos.offset());
-            rng.setEnd(pos.container(), pos.offset());
+        return CaretFinder.lastPositionIn(node).fold(() => false, pos => {
+            rng.setStart(pos.container, pos.offset);
+            rng.setEnd(pos.container, pos.offset);
             return true;
         });
     }
 
     static __padEmptyCaretContainer(root, node, rng) {
-        if (isEmpty(node) && getParentCaretContainer(root, node)) {
-            insertZwsp(node, rng);
+        if (this.__isEmpty(node) && CaretContainer.getParentCaretContainer(root, node)) {
+            this.__insertZwsp(node, rng);
             return true;
         }
         else {
@@ -90,14 +90,14 @@ export default class ResolveBookmark {
             offset = point[0];
             for (node = root, i = point.length - 1; i >= 1; i--) {
                 children = node.childNodes;
-                if (padEmptyCaretContainer(root, node, rng)) {
+                if (this.__padEmptyCaretContainer(root, node, rng)) {
                     return true;
                 }
                 if (point[i] > children.length - 1) {
-                    if (padEmptyCaretContainer(root, node, rng)) {
+                    if (this.__padEmptyCaretContainer(root, node, rng)) {
                         return true;
                     }
-                    return tryFindRangePosition(node, rng);
+                    return this.__tryFindRangePosition(node, rng);
                 }
                 node = children[point[i]];
             }
@@ -139,11 +139,11 @@ export default class ResolveBookmark {
                         node = marker.firstChild;
                         idx = 1;
                     }
-                    else if (isValidTextNode(marker.nextSibling)) {
+                    else if (this.__isValidTextNode(marker.nextSibling)) {
                         node = marker.nextSibling;
                         idx = 0;
                     }
-                    else if (isValidTextNode(marker.previousSibling)) {
+                    else if (this.__isValidTextNode(marker.previousSibling)) {
                         node = marker.previousSibling;
                         idx = marker.previousSibling.data.length;
                     }
@@ -164,7 +164,7 @@ export default class ResolveBookmark {
                         node = marker.firstChild;
                         idx = 1;
                     }
-                    else if (isValidTextNode(marker.previousSibling)) {
+                    else if (this.__isValidTextNode(marker.previousSibling)) {
                         node = marker.previousSibling;
                         idx = marker.previousSibling.data.length;
                     }
@@ -181,7 +181,7 @@ export default class ResolveBookmark {
                 prev = marker.previousSibling;
                 next = marker.nextSibling;
 
-                Tools.each(Tools.grep(marker.childNodes), (node) => {
+                ArrUtils.each(ArrUtils.filter(marker.childNodes), (node) => {
                     if (NodeType.isText(node)) {
                         node.nodeValue = node.nodeValue.replace(/\uFEFF/g, '');
                     }
@@ -205,7 +205,7 @@ export default class ResolveBookmark {
                     }
                 }
             }
-            return Option.some(CaretPosition(container, offset));
+            return Option.some(new CaretPosition(container, offset));
         }
         else {
             return Option.none();
@@ -219,7 +219,7 @@ export default class ResolveBookmark {
     static __resolvePaths(dom, bookmark) {
         let rng = dom.createRng();
 
-        if (setEndPoint(dom, true, bookmark, rng) && setEndPoint(dom, false, bookmark, rng)) {
+        if (this.__setEndPoint(dom, true, bookmark, rng) && this.__setEndPoint(dom, false, bookmark, rng)) {
             return Option.some(rng);
         }
         else {
@@ -228,22 +228,18 @@ export default class ResolveBookmark {
     }
 
     static __resolveId(dom, bookmark) {
-        let startPos = restoreEndPoint(dom, "start", bookmark), endPos = restoreEndPoint(dom, "end", bookmark);
+        let startPos = this.__restoreEndPoint(dom, "start", bookmark),
+            endPos = this.__restoreEndPoint(dom, "end", bookmark);
 
-        return Options.liftN([
-            startPos,
-            alt(endPos, startPos)
-        ], (spos, epos) => {
+        return Option.liftN([startPos, this.__alt(endPos, startPos)], (spos, epos) => {
             let rng = dom.createRng();
-            rng.setStart(addBogus(dom, spos.container()), spos.offset());
-            rng.setEnd(addBogus(dom, epos.container()), epos.offset());
+            rng.setStart(this.__addBogus(dom, spos.container, spos.offset));
+            rng.setEnd(this.__addBogus(dom, epos.container, epos.offset));
             return rng;
         });
     }
 
     static __resolveIndex(dom, bookmark) {
-        return Option.from(dom.select(bookmark.name)[bookmark.index]).map((elm) => {
-            return dom.createRng().selectNode(elm);
-        });
+        return Option.from(dom.select(bookmark.name)[bookmark.index]).map(elm => dom.createRng().selectNode(elm));
     }
 };

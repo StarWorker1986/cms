@@ -57,26 +57,26 @@ export default class Tools {
         return (a.compareDocumentPosition(b) & this.getOrDie("Node").DOCUMENT_POSITION_CONTAINED_BY) !== 0
     }
 
-    static each(xs, f) {
-        for (let i = 0, len = xs.length; i < len; i++) {
-            f(xs[i], i, xs);
+    static each(arry, fn) {
+        for (let i = 0, len = arry.length; i < len; i++) {
+            fn(arry[i], i, arry);
         }
     }
 
-    static filter(xs, pred) {
-        let r = [];
-        for (let i = 0, len = xs.length; i < len; i++) {
-            if (pred(xs[i], i, xs)) {
-                r.push(xs[i]);
+    static filter(arry, pred) {
+        let result = [];
+        for (let i = 0, len = arry.length; i < len; i++) {
+            if (pred(arry[i], i, arry)) {
+                result.push(arry[i]);
             }
         }
-        return r;
+        return result;
     }
 
-    static find(xs, pred) {
-        for (let i = 0, len = xs.length; i < len; i++) {
-            let x = xs[i];
-            if (pred(x, i, xs)) {
+    static find(arry, pred) {
+        for (let i = 0, len = arry.length; i < len; i++) {
+            let x = arry[i];
+            if (pred(x, i, arry)) {
                 return Option.some(x);
             }
         }
@@ -125,6 +125,37 @@ export default class Tools {
 
     static isFunction(value) {
         return this.__isType(value, "function");
+    }
+
+    static isString(value) {
+        return this.__isType(value, "string");
+    }
+
+    static immutable() {
+        let fields = [];
+
+        for (let i = 0; i < arguments.length; i++) {
+            fields[i] = arguments[i];
+        }
+
+        return () => {
+            let values = [];
+
+            for (let j = 0; j < arguments.length; j++) {
+                values[j] = arguments[j];
+            }
+
+            if (fields.length !== values.length) {
+                throw new Error('Wrong number of arguments to struct. Expected "[' + fields.length + ']", got ' + values.length + ' arguments');
+            }
+
+            let struct = {};
+            this.each(fields, (name, k) => {
+                struct[name] = Option.constant(values[k]);
+            });
+            
+            return struct;
+        };
     }
 
     static indexOf(xs, x) {
@@ -183,6 +214,16 @@ export default class Tools {
         return this.path(p.split('.'), scope);
     }
 
+    static reverse(arry) {
+        let copy = Array.prototype.slice.call(arry, 0);
+        copy.reverse();
+        return copy;
+    }
+
+    static trim(str) {
+        return (str === null || str === undefined) ? '' : ('' + str).replace(/^\s*|\s*$/g, '');
+    }
+
     static get __global() {
         return typeof window !== "undefined" ? window : Function("return this;")();
     }
@@ -195,10 +236,10 @@ export default class Tools {
         let sourceType = typeof value;
         if (sourceType === "object") {
             let constructorName = value.constructor && value.constructor.name;
-            if(Array.prototype.isPrototypeOf(value) || constructorName === "Array") {
+            if (Array.prototype.isPrototypeOf(value) || constructorName === "Array") {
                 sourceType = "array";
             }
-            else if(String.prototype.isPrototypeOf(value) || constructorName === "String") {
+            else if (String.prototype.isPrototypeOf(value) || constructorName === "String") {
                 sourceType = "string";
             }
         }

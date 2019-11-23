@@ -17,6 +17,20 @@ export default class CaretContainer {
         return this.isCaretContainerBlock(node) || this.isCaretContainerInline(node);
     }
 
+    static isCaretNode(node) {
+        return NodeType.isElement(node) && node.id === "_editor_caret";
+    }
+
+    static getParentCaretContainer(body, node) {
+        while (node && node !== body) {
+            if (node.id === "_editor_caret") {
+                return node;
+            }
+            node = node.parentNode;
+        }
+        return null;
+    };
+
     static hasContent(node) {
         return node.firstChild !== node.lastChild || !NodeType.isBr(node.firstChild);
     }
@@ -25,8 +39,8 @@ export default class CaretContainer {
         return NodeType.isText(node) && node.data[0] === Zwsp.ZWSP;
     }
 
-    static endsWithCaretContainer(node) { 
-        return NodeType.isText(node) && node.data[node.data.length - 1] === Zwsp.ZWSP; 
+    static endsWithCaretContainer(node) {
+        return NodeType.isText(node) && node.data[node.data.length - 1] === Zwsp.ZWSP;
     }
 
     static insertInline(node, before) {
@@ -145,7 +159,7 @@ export default class CaretContainer {
         return null;
     }
 
-    static isRangeInCaretContainerBlock(range) { 
+    static isRangeInCaretContainerBlock(range) {
         return this.isCaretContainerBlock(range.startContainer);
     }
 
