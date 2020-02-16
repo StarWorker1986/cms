@@ -6,15 +6,7 @@ export default class ElementType {
     static get isBlock() {
         return Tools.lazyLookup(blocks);
     }
-
-    static get isTable() {
-        return NodeType.isTable(node);
-    }
-
-    static get isInline() {
-        return NodeType.isElement(node) && !this.isBlock(node);
-    }
-
+    
     static get isHeading() {
         return Tools.lazyLookup(headings);
     }
@@ -43,11 +35,19 @@ export default class ElementType {
         return Tools.lazyLookup(tableCells);
     }
 
-    static get isBr() {
+    static get isWsPreserveElement() {
+        return Tools.lazyLookup(wsElements);
+    }
+
+    static isBr(node) {
         return NodeType.isElement(node) && NodeType.isBr(node);
     }
 
-    static get isWsPreserveElement() {
-        return Tools.lazyLookup(wsElements);
+    static isInline(node) {
+        return NodeType.isElement(node) && !this.isBlock(node);
+    }
+
+    static isTable(node) {
+        return NodeType.isTable(node);
     }
 }

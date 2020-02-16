@@ -10,23 +10,23 @@ export default class Dimensions {
     }
 
     static __getNodeClientRects(node) {
-        let toArrayWithNode = (clientRects) => {
-            return Tools.map(clientRects, (clientRect) => {
-                clientRect = GeomClientRect.clone(clientRect);
-                clientRect.node = node;
-                return clientRect;
-            });
-        };
-
         if (NodeType.isElement(node)) {
-            return toArrayWithNode(node.getClientRects());
+            return this.__toArrayWithNode(node.getClientRects());
         }
 
         if (NodeType.isText(node)) {
             let rng = node.ownerDocument.createRange();
             rng.setStart(node, 0);
             rng.setEnd(node, node.data.length);
-            return toArrayWithNode(rng.getClientRects());
+            return this.__toArrayWithNode(rng.getClientRects());
         }
-    };
+    }
+
+    static __toArrayWithNode(clientRects) {
+        return Tools.map(clientRects, (clientRect) => {
+            clientRect = GeomClientRect.clone(clientRect);
+            clientRect.node = node;
+            return clientRect;
+        });
+    }
 }

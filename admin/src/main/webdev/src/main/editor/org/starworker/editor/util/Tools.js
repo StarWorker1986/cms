@@ -1,6 +1,13 @@
-import Option from "Option";
+import Option from "./Option";
+import Env from "./Env";
 
 export default class Tools {
+    static addCacheSuffix(url) {
+        let cacheSuffix = new Date().getTime();
+        url += (url.indexOf('?') === -1 ? '?' : '&') + cacheSuffix;
+        return url;
+    }
+
     static bind(arry, fn) {
         let output = this.map(arry, fn);
         return this.flatten(output);
@@ -25,15 +32,14 @@ export default class Tools {
         };
     }
 
-    static contains(e1, e2) {
-        let d1 = e1.dom(), d2 = e2.dom();
-
-        if (Env.ie) {
-            return this.documentPositionContainedBy(d1, d2);
-        }
-        else {
-            return d1 === d2 ? false : d1.contains(d2);
-        }
+    static compose(fa, fb) {
+        return () => {
+            let args = [];
+            for (let i = 0; i < arguments.length; i++) {
+                args[i] = arguments[i];
+            }
+            return fa(fb.apply(null, args));
+        };
     }
 
     static curry(fn) {
@@ -53,14 +59,36 @@ export default class Tools {
         };
     }
 
-    static documentPositionContainedBy(a, b) {
-        return (a.compareDocumentPosition(b) & this.getOrDie("Node").DOCUMENT_POSITION_CONTAINED_BY) !== 0
+    static deepMerge() {
+        return this.__merge(true, arguments);
     }
 
     static each(arry, fn) {
         for (let i = 0, len = arry.length; i < len; i++) {
             fn(arry[i], i, arry);
         }
+    }
+
+    static exists(xs, pred) {
+        return this.findIndex(xs, pred).isSome();
+    }
+
+    static extend(obj, ext) {
+        let name, value, args = arguments;
+
+        for (let i = 1, l = args.length; i < l; i++) {
+            ext = args[i];
+            for (name in ext) {
+                if (ext.hasOwnProperty(name)) {
+                    value = ext[name];
+                    if (value !== undefined) {
+                        obj[name] = value;
+                    }
+                }
+            }
+        }
+
+        return obj;
     }
 
     static filter(arry, pred) {
@@ -78,6 +106,16 @@ export default class Tools {
             let x = arry[i];
             if (pred(x, i, arry)) {
                 return Option.some(x);
+            }
+        }
+        return Option.none();
+    }
+
+    static findIndex(arry, pred) {
+        for (let i = 0, len = arry.length; i < len; i++) {
+            let x = arry[i];
+            if (pred(x, i, arry)) {
+                return Option.some(i);
             }
         }
         return Option.none();
@@ -107,12 +145,29 @@ export default class Tools {
         return this.isFunction(Array.from) ? Array.from(x) : Array.prototype.slice.call(x);
     }
 
+    static get(obj, key) {
+        return this.has(obj, key) ? Option.from(obj[key]) : Option.none();
+    }
+
     static getOrDie(name, scope) {
         let actual = this.resolve(name, scope);
         if (actual === undefined || actual === null) {
             throw new Error(name + " not available on this browser");
         }
         return actual;
+    }
+
+    static generateId(prefix) {
+        let unique = 0;
+        return () => {
+            let date = new Date(), time = date.getTime(), random = Math.floor(Math.random() * 1000000000);
+            unique++;
+            return prefix + '_' + random + unique + String(time);
+        };
+    }
+
+    static has(obj, key) {
+        return hasOwnProperty.call(obj, key);
     }
 
     static head(xs) {
@@ -129,6 +184,10 @@ export default class Tools {
 
     static isString(value) {
         return this.__isType(value, "string");
+    }
+
+    static isObject(value) {
+        return this.__isType(value, "object");
     }
 
     static immutable() {
@@ -153,7 +212,7 @@ export default class Tools {
             this.each(fields, (name, k) => {
                 struct[name] = Option.constant(values[k]);
             });
-            
+
             return struct;
         };
     }
@@ -162,7 +221,7 @@ export default class Tools {
         // The rawIndexOf method does not wrap up in an option. This is for performance reasons.
         var r = this.__rawIndexOf(xs, x);
         return r === -1 ? Option.none() : Option.some(r);
-    };
+    }
 
     static last(xs) {
         return xs.length === 0 ? Option.none() : Option.some(xs[xs.length - 1]);
@@ -174,6 +233,23 @@ export default class Tools {
             lookup = lookup ? lookup : this.mapToObject(items, Option.constant(true));
             return lookup.hasOwnProperty(node.nodeName.toLowerCase);
         };
+    }
+
+    static makeMap(items, delim, map) {
+        items = items || [];
+        delim = delim || ',';
+        map = map || {};
+
+        if (typeof items === "string") {
+            items = items.split(delim);
+        }
+
+        let i = items.length;
+        while (i--) {
+            map[items[i]] = {};
+        }
+
+        return map;
     }
 
     static map(arry, fn) {
@@ -190,6 +266,19 @@ export default class Tools {
             result[String(arry[i])] = fn(arry[i], i);
         }
         return result;
+    }
+
+    static merge() {
+        return this.__merge(false, arguments);
+    }
+
+    static modifierPressed(evt) {
+        return evt.shiftKey || evt.ctrlKey || evt.altKey || this.metaKeyPressed(e);
+    }
+
+    static metaKeyPressed(evt) {
+        // Check if ctrl or meta key is pressed. Edge case for AltGr on Windows where it produces ctrlKey+altKey states
+        return (Env.mac ? evt.metaKey : evt.ctrlKey && !evt.altKey);
     }
 
     static not(fn) {
@@ -210,6 +299,15 @@ export default class Tools {
         return o;
     }
 
+    static partition(xs, pred) {
+        let pass = [], fail = [];
+        for (let i = 0, len = xs.length; i < len; i++) {
+            let x = xs[i], arr = pred(x, i, xs) ? pass : fail;
+            arr.push(x);
+        }
+        return { pass: pass, fail: fail };
+    }
+
     static resolve(p, scope) {
         return this.path(p.split('.'), scope);
     }
@@ -220,12 +318,72 @@ export default class Tools {
         return copy;
     }
 
+    static rest(s, e) {
+        let t = {};
+        for (let p in s) {
+            if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0) {
+                t[p] = s[p];
+            }
+        }
+
+        if (s != null && typeof Object.getOwnPropertySymbols === "function")
+            for (let i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+                if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i])) {
+                    t[p[i]] = s[p[i]];
+                }
+            }
+        return t;
+    }
+
+    static sort(arry, comparator) {
+        let copy = Array.prototype.slice.call(arry, 0);
+        copy.sort(comparator);
+        return copy;
+    }
+
     static trim(str) {
         return (str === null || str === undefined) ? '' : ('' + str).replace(/^\s*|\s*$/g, '');
     }
 
+    static toString(obj) {
+        if (this.isFunction(obj)) {
+            return Object.prototype.toString.call(obj);
+        }
+
+        let isEmpty = (obj === '' || obj === null || obj === undefined);
+        return !isEmpty ? '' + obj : '';
+    }
+
     static get __global() {
         return typeof window !== "undefined" ? window : Function("return this;")();
+    }
+
+    static __merge(isDeep, args) {
+        let objects = new Array(args.length);
+
+        for (let i = 0; i < args.length; i++) {
+            objects[i] = args[i];
+        }
+        if (objects.length === 0) {
+            throw new Error("Can't merge zero objects");
+        }
+
+        let ret = {};
+
+        for (let j = 0; j < objects.length; j++) {
+            let curObject = objects[j];
+            for (let key in curObject) {
+                if (hasOwnProperty.call(curObject, key)) {
+                    let old = ret[key], cur = curObject[key];
+                    if (isDeep) {
+                        cur = this.isObject(old) && this.isObject(cur) ? this.deepMerge(old, cur) : cur;
+                    }
+                    ret[key] = cur;
+                }
+            }
+        }
+
+        return ret;
     }
 
     static __isType(value, targetType) {

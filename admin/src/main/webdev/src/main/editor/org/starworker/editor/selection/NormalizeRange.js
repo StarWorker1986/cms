@@ -1,5 +1,6 @@
 import Option from "../util/Option";
 import CaretContainer from "../caret/CaretContainer";
+import DOMUtils from "../dom/DOMUtils";
 import NodeType from "../dom/NodeType";
 import TreeWalker from "../dom/TreeWalker";
 import CaretContainer from "../care/CaretContainer";
@@ -8,12 +9,7 @@ import CaretPosition from "../caret/CaretPosition";
 export default class NormalizeRange {
     static normalize(dom, rng) {
         let collapsed = rng.collapsed, normRng = rng.cloneRange(),
-            startPos = CaretPosition.fromRangeStart(rng),
-            isEq = (rng1, rng2) => {
-                return rng1 && rng2
-                    && (rng1.startContainer === rng2.startContainer && rng1.startOffset === rng2.startOffset)
-                    && (rng1.endContainer === rng2.endContainer && rng1.endOffset === rng2.endOffset);
-            };
+            startPos = CaretPosition.fromRangeStart(rng);
 
         this.__normalizeEndPoint(dom, collapsed, true, normRng).each((pos) => {
             if (!collapsed || !CaretPosition.isAbove(startPos, pos)) {
@@ -31,7 +27,7 @@ export default class NormalizeRange {
         if (collapsed) {
             normRng.collapse(true);
         }
-        return isEq(rng, normRng) ? Option.none() : Option.some(normRng);
+        return DOMUtils.isRangeEq(rng, normRng) ? Option.none() : Option.some(normRng);
     }
 
     static __findParent(node, rootNode, predicate) {

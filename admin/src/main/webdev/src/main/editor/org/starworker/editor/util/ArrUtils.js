@@ -1,19 +1,8 @@
+import Tools from "./Tools";
+
 export default class ArrUtils {
     static get isArray() {
         return Array.isArray
-    }
-
-    static toArray(obj) {
-        let array = obj, i, l;
-
-        if (!this.isArray(obj)) {
-            array = [];
-            for (i = 0, l = obj.length; i < l; i++) {
-                array[i] = obj[i];
-            }
-        }
-        
-        return array;
     }
 
     static each(obj, fn, scope) {
@@ -47,12 +36,11 @@ export default class ArrUtils {
         return 1;
     }
 
-    static map(arry, fn) {
-        let out = [];
-        this.each(arry, (item, index) => {
-            out.push(fn(item, index, arry));
-        });
-        return out;
+    static explode(str, delima) {
+        if (!str || this.isArray(str)) {
+            return str;
+        }
+        return this.map(str.split(delima || ','), Tools.trim);
     }
 
     static filter(arry, fn) {
@@ -63,29 +51,6 @@ export default class ArrUtils {
             }
         });
         return result;
-    }
-
-    static indexOf(arry, val) {
-        let i, len;
-        if (arry) {
-            for (i = 0, len = a.length; i < len; i++) {
-                if (arry[i] === val) {
-                    return i;
-                }
-            }
-        }
-        return -1;
-    }
-
-    static reduce(collection, iteratee, accumulator, thisArg) {
-        let i = 0;
-        if (arguments.length < 3) {
-            accumulator = collection[0];
-        }
-        for (; i < collection.length; i++) {
-            accumulator = iteratee.call(thisArg, accumulator, collection[i], i);
-        }
-        return accumulator;
     }
 
     static findIndex(array, predicate, thisArg) {
@@ -106,7 +71,51 @@ export default class ArrUtils {
         return undefined;
     }
 
+    static indexOf(arry, val) {
+        let i, len;
+        if (arry) {
+            for (i = 0, len = a.length; i < len; i++) {
+                if (arry[i] === val) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
     static last(collection) {
         return collection[collection.length - 1];
     }
+
+    static map(arry, fn) {
+        let out = [];
+        this.each(arry, (item, index) => {
+            out.push(fn(item, index, arry));
+        });
+        return out;
+    }
+
+    static reduce(collection, iteratee, accumulator, thisArg) {
+        let i = 0;
+        if (arguments.length < 3) {
+            accumulator = collection[0];
+        }
+        for (; i < collection.length; i++) {
+            accumulator = iteratee.call(thisArg, accumulator, collection[i], i);
+        }
+        return accumulator;
+    }
+
+    static toArray(obj) {
+        let array = obj, i, l;
+
+        if (!this.isArray(obj)) {
+            array = [];
+            for (i = 0, l = obj.length; i < l; i++) {
+                array[i] = obj[i];
+            }
+        }
+        
+        return array;
+    }    
 }
