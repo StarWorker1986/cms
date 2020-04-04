@@ -130,5 +130,5 @@ export default class RangeWalk {
                 callback(this.__exclude(siblings));
             }
         }
-    };
+    }
 }

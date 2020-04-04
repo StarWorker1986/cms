@@ -1,11 +1,15 @@
+import Env from "../util/Env";
 import Option from "../util/Option";
 import Tools from "../util/Tools";
 import ArrUtils from "../util/ArrUtils";
 import PlatformDetection from "../util/PlatformDetection";
 import NodeType from "./NodeType";
 import EventUtils from "./EventUtils";
+import TrimNode from "./TrimNode";
 import Position from "./Position";
 import Schema from "../html/Schema";
+import Styles from "../html/Styles";
+import TreeWalker from "./TreeWalker";
 
 export default class DOMUtils {
     constructor(doc, settings) {
@@ -19,6 +23,66 @@ export default class DOMUtils {
         this._boundEvents = [];
         this._events = settings.ownEvents ? new EventUtils(settings.proxy) : EventUtils.Event;
         this._schema = settings.schema ? settings.schema : new Schema({});
+        this._addedStyles = {};
+        this._styles = new Styles({
+            urlConverter: settings.urlConverter,
+            urlConverterScope: settings.urlConverterScope
+        }, settings.schema);
+    }
+
+    add(parentElm, name, attrs, html, create) {
+        return this.run(parentElm, (parentElm) => {
+            let newElm = (typeof name === "string" ? this.doc.createElement(name) : name);
+            this.setAttribs(newElm, attrs);
+            if (html) {
+                if (typeof html !== "string" && html.nodeType) {
+                    newElm.appendChild(html);
+                }
+                else if (typeof html === "string") {
+                    this.setHTML(newElm, html);
+                }
+            }
+            return !create ? parentElm.appendChild(newElm) : newElm;
+        });
+    }
+
+    addClass(elm, cls) {
+        $(elm).addClass(cls);
+    }
+
+    addStyle(cssText) {
+        let head, styleElm, doc = this.doc;
+
+        if (self !== DOMUtils.DOM && doc === document) {
+            if (this._addedStyles[cssText]) {
+                return;
+            }
+            this._addedStyles[cssText] = true;
+        }
+
+        // Create style element if needed
+        styleElm = doc.getElementById("editorDefaultStyles");
+        if (!styleElm) {
+            styleElm = doc.createElement("style");
+            styleElm.id = "editorDefaultStyles";
+            styleElm.type = "text/css";
+            
+            head = doc.getElementsByTagName("head")[0];
+            if (head.firstChild) {
+                head.insertBefore(styleElm, head.firstChild);
+            }
+            else {
+                head.appendChild(styleElm);
+            }
+        }
+
+        // Append style data to old or new style element
+        if (styleElm.styleSheet) {
+            styleElm.styleSheet.cssText += cssText;
+        }
+        else {
+            styleElm.appendChild(doc.createTextNode(cssText));
+        }
     }
 
     bind(target, name, func, scope) {
@@ -37,6 +101,37 @@ export default class DOMUtils {
         return this._events.bind(target, name, func, scope || self);
     }
 
+    clone(node, deep) {
+        if (!Env.ie || node.nodeType !== 1 || deep) {
+            return node.cloneNode(deep);
+        }
+
+        // Make a HTML5 safe shallow copy
+        if (!deep) {
+            let clone = this.doc.createElement(node.nodeName);
+            ArrUtils.each(this.getAttribs(node), (attr) => {
+                this.setAttrib(clone, attr.nodeName, this.getAttrib(node, attr.nodeName));
+            });
+            return clone;
+        }
+        return null;
+    }
+
+    create(name, attrs, html) {
+        return $(this.doc.createElement(name)).attr(attrs).html(html)[0];
+    }
+
+    createFragment(html) {
+        let doc = this.doc, node, container = doc.createElement("div"), frag = doc.createDocumentFragment();
+        if (html) {
+            container.innerHTML = html;
+        }
+        while ((node = container.firstChild)) {
+            frag.appendChild(node);
+        }
+        return frag;
+    }
+
     createRng() {
         return this.doc.createRange();
     }
@@ -44,7 +139,7 @@ export default class DOMUtils {
     get(elm) {
         if (elm && this.doc && typeof elm === "string") {
             let node = this.doc.getElementById(elm);
-            
+
             // IE and Opera returns meta elements when they match the specified input ID, but getElementsByName seems to do the trick
             if (node && node.id !== elm) {
                 return this.doc.getElementsByName(elm)[1];
@@ -55,6 +150,18 @@ export default class DOMUtils {
         }
 
         return elm;
+    }
+
+    getAttrib(elm, name) {
+        return $(elm).attr(name);
+    }
+
+    getAttribs(elm) {
+        let node = this.get(elm);
+        if (!node) {
+            return [];
+        }
+        return node.attributes;
     }
 
     getContentEditable(node) {
@@ -120,7 +227,7 @@ export default class DOMUtils {
 
         return collect ? result : null;
     }
-    
+
     getParent(node, selector, root) {
         let parents = this.getParents(node, selector, root, false);
         return parents && parents.length > 0 ? parents[0] : null;
@@ -139,6 +246,27 @@ export default class DOMUtils {
         return this.settings.rootElement || this.doc.body;
     }
 
+    getStyle(elm, name, computed) {
+        let $elm = $(elm);
+        if (computed) {
+            return $elm.css(name);
+        }
+
+        // Camelcase it, if needed
+        name = name.replace(/-(\D)/g, (a, b) => {
+            return b.toUpperCase();
+        });
+
+        if (name === "float") {
+            name = Env.ie && Env.ie < 12 ? "styleFloat" : "cssFloat";
+        }
+        return $elm[0] && $elm[0].style ? $elm[0].style[name] : undefined;
+    }
+
+    hasClass(elm, cls) {
+        return $(elm).hasClass(cls);
+    }
+
     is(elm, selector) {
         if (!elm) {
             return false;
@@ -152,7 +280,7 @@ export default class DOMUtils {
             }
 
             let i, simpleSelectorRe = /^([a-z0-9],?)+$/i, selectors, elmName;
-            
+
             // Simple selector just elements
             if (simpleSelectorRe.test(selector)) {
                 selectors = selector.toLowerCase().split(/,/);
@@ -189,7 +317,7 @@ export default class DOMUtils {
                 return !!(type === 1 && blockElementsMap[node.nodeName]);
             }
         }
-        
+
         return false;
     }
 
@@ -201,6 +329,68 @@ export default class DOMUtils {
             node = node.parentNode;
         }
         return false;
+    }
+
+    isEmpty(node, elements) {
+        let i, attributes, type, whitespace, walker, name, brCount = 0, bogusVal, whiteSpaceRegExp = /^[ \t\r\n]*$/;
+        
+        node = node.firstChild;
+        if (node) {
+            walker = new TreeWalker(node, node.parentNode);
+            elements = elements || (this._schema ? this._schema.getNonEmptyElements() : null);
+            whitespace = this._schema ? this._schema.getWhiteSpaceElements() : {};
+
+            do {
+                type = node.nodeType;
+                if (NodeType.isElement(node)) {
+                    bogusVal = node.getAttribute("data-editor-bogus");
+                    if (bogusVal) {
+                        node = walker.next(bogusVal === "all");
+                        continue;
+                    }
+
+                    // Keep empty elements like <img />
+                    name = node.nodeName.toLowerCase();
+                    if (elements && elements[name]) {
+                        // Ignore single BR elements in blocks like <p><br /></p> or <p><span><br /></span></p>
+                        if (name === "br") {
+                            brCount++;
+                            node = walker.next();
+                            continue;
+                        }
+                        return false;
+                    }
+
+                    // Keep elements with data-bookmark attributes or name attribute like <a name="1"></a>
+                    attributes = this.getAttribs(node);
+                    i = attributes.length;
+                    while (i--) {
+                        name = attributes[i].nodeName;
+                        if (name === "name" || name === "data-editor-bookmark") {
+                            return false;
+                        }
+                    }
+                }
+
+                // Keep comment nodes
+                if (type === 8) {
+                    return false;
+                }
+
+                // Keep non whitespace text nodes
+                if (type === 3 && !whiteSpaceRegExp.test(node.nodeValue)) {
+                    return false;
+                }
+                
+                // Keep whitespace preserve elements
+                if (type === 3 && node.parentNode && whitespace[node.parentNode.nodeName] && whiteSpaceRegExp.test(node.nodeValue)) {
+                    return false;
+                }
+                node = walker.next();
+            } while (node);
+        }
+
+        return brCount <= 1;
     }
 
     nodeIndex(node, normalized) {
@@ -220,6 +410,194 @@ export default class DOMUtils {
         }
 
         return idx;
+    }
+
+    parseStyle(cssText) {
+        return this._styles.parse(cssText);
+    }
+
+    remove(node, keepChildren) {
+        let $node = $(node);
+
+        if (keepChildren) {
+            $node.each(function() {
+                let child;
+                while ((child = this.firstChild)) {
+                    if (child.nodeType === 3 && child.data.length === 0) {
+                        this.removeChild(child);
+                    }
+                    else {
+                        this.parentNode.insertBefore(child, this);
+                    }
+                }
+            }).remove();
+        }
+        else {
+            $node.remove();
+        }
+        return $node.length > 1 ? $node.toArray() : $node[0];
+    }
+
+    removeClass(elm, cls) {
+        $(elm).removeClass(cls);
+    }
+
+    rename(elm, name) {
+        let newElm;
+        if (elm.nodeName !== name.toUpperCase()) {
+            newElm = this.create(name);
+            ArrUtils.each(this.getAttribs(elm), (attrNode) => {
+                this.setAttrib(newElm, attrNode.nodeName, this.getAttrib(elm, attrNode.nodeName));
+            });
+            this.replace(newElm, elm, true);
+        }
+        return newElm || elm;
+    }
+
+    replace(newElm, oldElm, keepChildren) {
+        return this.run(oldElm, (oldElm) => {
+            if (Array.isArray(oldElm)) {
+                newElm = newElm.cloneNode(true);
+            }
+
+            if (keepChildren) {
+                ArrUtils.each(Tools.grep(oldElm.childNodes), (node) => {
+                    newElm.appendChild(node);
+                });
+            }
+
+            return oldElm.parentNode.replaceChild(newElm, oldElm);
+        });
+    }
+
+    run(elm, func, scope) {
+        let result, node = typeof elm === "string" ? this.get(elm) : elm;
+        if (!node) {
+            return false;
+        }
+
+        if (Tools.isArray(node) && (node.length || node.length === 0)) {
+            result = [];
+            ArrUtils.each(node, (elm, i) => {
+                if (elm) {
+                    if (typeof elm === "string") {
+                        elm = this.get(elm);
+                    }
+                    result.push(func.call(scope, elm, i));
+                }
+            });
+            return result;
+        }
+
+        return func.call(scope ? scope : this, node);
+    }
+
+    select(selector, scope) {
+        return $(selector, this.get(scope) || this.settings.rootElement || this.doc).toArray();
+    }
+
+    setAttrib(elm, name, value) {
+        $(elm).attr(name, value);
+    }
+
+    setAttribs(elm, attrs) {
+        $(elm).attr(attrs);
+    }
+
+    setHTML(elm, html) {
+        let $elm = $(elm);
+        if (Env.isIE) {
+            $elm.each((i, target) => {
+                if (target.canHaveHTML === false) {
+                    return;
+                }
+
+                // Remove all child nodes, IE keeps empty text nodes in DOM
+                while (target.firstChild) {
+                    target.removeChild(target.firstChild);
+                }
+                try {
+                    // IE will remove comments from the beginning
+                    // unless you padd the contents with something
+                    target.innerHTML = '<br>' + html;
+                    target.removeChild(target.firstChild);
+                }
+                catch (ex) {
+                    // IE sometimes produces an unknown runtime error on innerHTML if it's a div inside a p
+                    $('<div></div>').html('<br>' + html).contents().slice(1).appendTo(target);
+                }
+                return html;
+            });
+        }
+        else {
+            $elm.html(html);
+        }
+    }
+
+    setOuterHTML(elm, html) {
+        $(elm).each(() => {
+            try {
+                if ("outerHTML" in this) {
+                    this.outerHTML = html;
+                    return;
+                }
+            }
+            catch (ex) {
+                // Ignore
+            }
+        });
+    }
+
+    serializeStyle(stylesArg, name) {
+        return this._styles.serialize(stylesArg, name);
+    }
+
+    setStyle(elm, name, value) {
+        let $elm = $(elm).css(name, value);
+        if (this.settings.updateStyles) {
+            this.__updateInternalStyleAttr(this._styles, $elm);
+        }
+    }
+
+    setStyles(elm, stylesArg) {
+        let $elm = $(elm).css(stylesArg);
+        if (settings.updateStyles) {
+            this.__updateInternalStyleAttr(this._styles, $elm);
+        }
+    }
+
+    split(parentElm, splitElm, replacementElm) {
+        let rng = this.createRng(), contents1, contents2, parentNode;
+
+        if (parentElm && splitElm) {
+            rng.setStart(parentElm.parentNode, this.nodeIndex(parentElm));
+            rng.setEnd(splitElm.parentNode, this.nodeIndex(splitElm));
+            contents1 = rng.extractContents();
+
+            rng = this.createRng();
+            rng.setStart(splitElm.parentNode, this.nodeIndex(splitElm) + 1);
+            rng.setEnd(parentElm.parentNode, this.nodeIndex(parentElm) + 1);
+            contents2 = rng.extractContents();
+
+            parentNode = parentElm.parentNode;
+            parentNode.insertBefore(TrimNode.trimNode(self, contents1), parentElm);
+
+            if (replacementElm) {
+                parentNode.insertBefore(replacementElm, parentElm);
+            }
+            else {
+                parentNode.insertBefore(splitElm, parentElm);
+            }
+            
+            parentNode.insertBefore(TrimNode.trimNode(self, contents2), parentElm);
+            this.remove(parentElm);
+
+            return replacementElm || splitElm;
+        }
+    }
+
+    toHex(rgbVal) {
+        return this._styles.toHex(Tools.trim(rgbVal));
     }
 
     uniqueId(prefix) {
@@ -251,8 +629,25 @@ export default class DOMUtils {
         return this._events.unbind(target, name, func);
     }
 
+    __updateInternalStyleAttr(styles, $elm) {
+        let rawValue = $elm.attr("style"),
+            value = styles.serialize(styles.parse(rawValue), $elm[0].nodeName);
+        if (!value) {
+            value = null;
+        }
+        $elm.attr("data-editor-style", value);
+    }
+
+    static get $() {
+        return jQuery;
+    }
+
     static get DOM() {
         return new DOMUtils(document);
+    }
+
+    static addClass(elm, cls) {
+        $(elm.dom()).addClass(cls);
     }
 
     static ancestor(scope, predicate, isRoot) {
@@ -290,6 +685,10 @@ export default class DOMUtils {
         parent.dom().appendChild(element.dom());
     }
 
+    static attr(elm, attr) {
+        $(elm.dom()).attr(attr);
+    }
+
     static before(marker, element) {
         let parent = this.parent(marker);
         parent.each((v) => {
@@ -317,7 +716,8 @@ export default class DOMUtils {
     }
 
     static closest(scope, selector, isRoot) {
-        return this.is(scope, selector) ? Option.some(scope) : Tools.isFunction(isRoot) && isRoot(scope) ? Option.none() : this.ancestor(scope, selector, isRoot);
+        return this.is(scope, selector) ? Option.some(scope) :
+               Tools.isFunction(isRoot) && isRoot(scope) ? Option.none() : this.ancestor(scope, selector, isRoot);
     }
 
     static documentPositionContainedBy(a, b) {
@@ -333,15 +733,14 @@ export default class DOMUtils {
     }
 
     static empty(element) {
-        // shortcut "empty node" trick. Requires IE 9.
         element.dom().textContent = '';
-        // If the contents was a single empty text node, the above doesn't remove it. But, it's still faster in general
-        // than removing every child node manually.
-        // The following is (probably) safe for performance as 99.9% of the time the trick works and
-        // Traverse.children will return an empty array.
         Tools.each(this.children(element), (rogue) => {
             this.remove(rogue);
         });
+    }
+
+    static eq(e1, e2) {
+        return e1.dom() === e2.dom();
     }
 
     static findEndTagIndex(schema, html, startIndex) {
@@ -421,15 +820,19 @@ export default class DOMUtils {
     static getCss(element, property) {
         let dom = element.dom(),
             styles = window.getComputedStyle(dom),
-            r = styles.getPropertyValue(property),
+            prop = styles.getPropertyValue(property),
             isSupported = dom.style !== undefined && Tools.isFunction(dom.style.getPropertyValue),
-            v = (r === '' && (!this.__isInBody(element) ? (isSupported ? dom.style.getPropertyValue(property) : '') : r));
+            v = (prop === '' && (!this.__isInBody(element) ? (isSupported ? dom.style.getPropertyValue(property) : '') : r));
         return v === null ? undefined : v;
     }
 
     static getDescendant(scope, selector) {
         let base = (scope === undefined ? document : scope.dom());
         return this.__bypassSelector(base) ? Option.none() : Option.from(base.querySelector(selector)).map(this.fromDom);
+    }
+
+    static hasClass(elm, name) {
+        return $(elm.dom()).hasClass(name);
     }
 
     static is(element, selector) {
@@ -457,8 +860,8 @@ export default class DOMUtils {
 
     static isRangeEq(rng1, rng2) {
         return rng1 && rng2
-                    && (rng1.startContainer === rng2.startContainer && rng1.startOffset === rng2.startOffset)
-                    && (rng1.endContainer === rng2.endContainer && rng1.endOffset === rng2.endOffset);
+            && (rng1.startContainer === rng2.startContainer && rng1.startOffset === rng2.startOffset)
+            && (rng1.endContainer === rng2.endContainer && rng1.endOffset === rng2.endOffset);
     }
 
     static lastChild(element) {
@@ -497,6 +900,16 @@ export default class DOMUtils {
         return this.toArray(element, prevSibling).reverse();
     }
 
+    static prepend(parent, element) {
+        let firstChild = this.firstChild(parent);
+        firstChild.fold(() => {
+            this.append(parent, element);
+        },
+        (v) => {
+            parent.dom().insertBefore(element.dom(), v.dom());
+        });
+    }
+
     static parents(element, isRoot) {
         let ret = [], stop = Tools.isFunction(isRoot) ? isRoot : Option.constant(false), dom = element.dom();
 
@@ -527,16 +940,12 @@ export default class DOMUtils {
         }
     }
 
-    static shallow(orig) {
-        return this.fromDom(orig.dom().cloneNode(false));
+    static removeClass(elm, name) {
+        return $(elm.dom()).removeClass(name);
     }
 
-    static unwrap(wrapper) {
-        let children = this.children(wrapper);
-        if (children.length > 0) {
-            this.before(wrapper, children);
-        }
-        this.remove(wrapper);
+    static shallow(orig) {
+        return this.fromDom(orig.dom().cloneNode(false));
     }
 
     static toArray(target, fn) {
@@ -553,6 +962,19 @@ export default class DOMUtils {
         } while (current.isSome());
 
         return result;
+    }
+
+    static unwrap(wrapper) {
+        let children = this.children(wrapper);
+        if (children.length > 0) {
+            this.before(wrapper, children);
+        }
+        this.remove(wrapper);
+    }
+
+    static wrap(element, wrapper) {
+        this.before(element, wrapper);
+        this.append(wrapper, element);
     }
 
     static __bypassSelector(dom) {

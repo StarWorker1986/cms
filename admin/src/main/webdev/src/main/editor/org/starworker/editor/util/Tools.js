@@ -42,6 +42,10 @@ export default class Tools {
         };
     }
 
+    static contains(arry, v) {
+        return this.__rawIndexOf(arry, v) > -1;
+    }
+
     static curry(fn) {
         let initialArgs = [];
 
@@ -64,13 +68,17 @@ export default class Tools {
     }
 
     static each(arry, fn) {
+        if(!arry || arry.length === undefined) {
+            return;
+        }
+
         for (let i = 0, len = arry.length; i < len; i++) {
             fn(arry[i], i, arry);
         }
-    }
+    }    
 
-    static exists(xs, pred) {
-        return this.findIndex(xs, pred).isSome();
+    static exists(arry, pred) {
+        return this.findIndex(arry, pred).isSome();
     }
 
     static extend(obj, ext) {
@@ -103,9 +111,9 @@ export default class Tools {
 
     static find(arry, pred) {
         for (let i = 0, len = arry.length; i < len; i++) {
-            let x = arry[i];
-            if (pred(x, i, arry)) {
-                return Option.some(x);
+            let v = arry[i];
+            if (pred(v, i, arry)) {
+                return Option.some(v);
             }
         }
         return Option.none();
@@ -113,8 +121,8 @@ export default class Tools {
 
     static findIndex(arry, pred) {
         for (let i = 0, len = arry.length; i < len; i++) {
-            let x = arry[i];
-            if (pred(x, i, arry)) {
+            let v = arry[i];
+            if (pred(v, i, arry)) {
                 return Option.some(i);
             }
         }
@@ -134,15 +142,25 @@ export default class Tools {
         return result;
     }
 
-    static foldl(xs, f, acc) {
-        this.each(xs, (x) => {
-            acc = f(acc, x);
+    static foldl(arry, f, acc) {
+        this.each(arry, (v) => {
+            acc = f(acc, v);
         });
         return acc;
     }
 
-    static from(x) {
-        return this.isFunction(Array.from) ? Array.from(x) : Array.prototype.slice.call(x);
+    static forall(arry, pred) {
+        for (let i = 0, len = arry.length; i < len; ++i) {
+            let v = arry[i];
+            if (pred(v, i, arry) !== true) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    static from(v) {
+        return this.isFunction(Array.from) ? Array.from(v) : Array.prototype.slice.call(v);
     }
 
     static get(obj, key) {
@@ -170,8 +188,8 @@ export default class Tools {
         return hasOwnProperty.call(obj, key);
     }
 
-    static head(xs) {
-        return xs.length === 0 ? Option.none() : Option.some(xs[0]);
+    static head(arry) {
+        return arry.length === 0 ? Option.none() : Option.some(arry[0]);
     }
 
     static isArray(value) {
@@ -188,6 +206,22 @@ export default class Tools {
 
     static isObject(value) {
         return this.__isType(value, "object");
+    }
+
+    static isNull(value) {
+        return this.__isType(value, "null");
+    }
+
+    static isUndefined(value) {
+        return this.__isType(value, "undefined");
+    }
+
+    static isBoolean(value) {
+        return this.__isType(value, "boolean");
+    }
+
+    static isNumber(value) {
+        return this.__isType(value, "number");
     }
 
     static immutable() {
@@ -217,14 +251,14 @@ export default class Tools {
         };
     }
 
-    static indexOf(xs, x) {
+    static indexOf(arry, v) {
         // The rawIndexOf method does not wrap up in an option. This is for performance reasons.
-        var r = this.__rawIndexOf(xs, x);
+        let r = this.__rawIndexOf(arry, v);
         return r === -1 ? Option.none() : Option.some(r);
     }
 
-    static last(xs) {
-        return xs.length === 0 ? Option.none() : Option.some(xs[xs.length - 1]);
+    static last(arry) {
+        return arry.length === 0 ? Option.none() : Option.some(arry[arry.length - 1]);
     }
 
     static lazyLookup(items) {
@@ -233,6 +267,10 @@ export default class Tools {
             lookup = lookup ? lookup : this.mapToObject(items, Option.constant(true));
             return lookup.hasOwnProperty(node.nodeName.toLowerCase);
         };
+    }
+
+    static lTrim(str) {
+        return str && str.replace(/^\s+/g, '');
     }
 
     static makeMap(items, delim, map) {
@@ -299,11 +337,11 @@ export default class Tools {
         return o;
     }
 
-    static partition(xs, pred) {
+    static partition(arry, pred) {
         let pass = [], fail = [];
-        for (let i = 0, len = xs.length; i < len; i++) {
-            let x = xs[i], arr = pred(x, i, xs) ? pass : fail;
-            arr.push(x);
+        for (let i = 0, len = arry.length; i < len; i++) {
+            let v = arry[i], arr = pred(v, i, arry) ? pass : fail;
+            arr.push(v);
         }
         return { pass: pass, fail: fail };
     }
@@ -335,6 +373,10 @@ export default class Tools {
         return t;
     }
 
+    static rTrim(str) {
+        return str && str.replace(/\s+$/g, '');
+    }
+
     static sort(arry, comparator) {
         let copy = Array.prototype.slice.call(arry, 0);
         copy.sort(comparator);
@@ -353,7 +395,7 @@ export default class Tools {
         let isEmpty = (obj === '' || obj === null || obj === undefined);
         return !isEmpty ? '' + obj : '';
     }
-
+    
     static get __global() {
         return typeof window !== "undefined" ? window : Function("return this;")();
     }
@@ -407,14 +449,14 @@ export default class Tools {
 
     static get __rawIndexOf() {
         let pIndexOf = Array.prototype.indexOf,
-            fastIndex = (xs, x) => { return pIndexOf.call(xs, x); },
-            slowIndex = (xs, x) => { return this.__slowIndexOf(xs, x); };
+            fastIndex = (arry, v) => { return pIndexOf.call(arry, v); },
+            slowIndex = (arry, v) => { return this.__slowIndexOf(arry, v); };
         return pIndexOf === undefined ? slowIndex : fastIndex;
     }
 
-    static __slowIndexOf(xs, x) {
-        for (let i = 0, len = xs.length; i < len; ++i) {
-            if (xs[i] === x) {
+    static __slowIndexOf(arry, v) {
+        for (let i = 0, len = arry.length; i < len; ++i) {
+            if (arry[i] === v) {
                 return i;
             }
         }

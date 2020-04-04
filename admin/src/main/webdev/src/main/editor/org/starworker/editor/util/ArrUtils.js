@@ -118,4 +118,19 @@ export default class ArrUtils {
         
         return array;
     }    
+
+    static walk(arry, fn, child, scope) {
+        scope = scope || this;
+        if (arry) {
+            if (child) {
+                arry = arry[child];
+            }
+            this.each(arry, (arry, i) => {
+                if (fn.call(scope, arry, i, child) === false) {
+                    return false;
+                }
+                walk(arry, fn, child, scope);
+            });
+        }
+    }
 }

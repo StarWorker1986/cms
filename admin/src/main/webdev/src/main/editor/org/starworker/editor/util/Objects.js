@@ -1,4 +1,13 @@
 export default class Objects {
+    static bifilter(obj, pred) {
+        let t = {}, f = {};
+        this.each(obj, (v, k) => {
+            let branch = pred(v, k) ? t : f;
+            branch[k] = v;
+        });
+        return { t: t, f: f };
+    }
+
     static each(obj, fn) {
         let props = Object.keys(obj);
         for (let i = 0, len = props.length; i < len; i++) {
@@ -16,7 +25,6 @@ export default class Objects {
         });
     }
 
-    /** tupleMap :: (JsObj(k, v), (v, k, JsObj(k, v) -> { k: x, v: y })) -> JsObj(x, y) */
     static tupleMap(obj, fn) {
         let r = {};
         this.each(obj, (x, i) => {

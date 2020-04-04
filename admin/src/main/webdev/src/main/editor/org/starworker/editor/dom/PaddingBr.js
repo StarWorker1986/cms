@@ -4,6 +4,7 @@ import NodeType from "./NodeType";
 import ElementType from "./ElementType";
 
 export default class PaddingBr {
+    
     static fillWithPaddingBr(elm) {
         DOMUtils.empty(elm);
         DOMUtils.append(elm, DOMUtils.fromHtml('<br data-editor-bogus="1">'));
