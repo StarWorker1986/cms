@@ -67,6 +67,10 @@ export default class Tools {
         return this.__merge(true, arguments);
     }
 
+    static difference(arry1, arry2) {
+        return this.filter(arry1, (x) => !this.contains(arry2, x));
+    }
+
     static each(arry, fn) {
         if(!arry || arry.length === undefined) {
             return;
@@ -75,7 +79,17 @@ export default class Tools {
         for (let i = 0, len = arry.length; i < len; i++) {
             fn(arry[i], i, arry);
         }
-    }    
+    }
+
+    static evaluateUntil(fns, args) {
+        for (let i = 0; i < fns.length; i++) {
+            let result = fns[i].apply(null, args);
+            if (result.isSome()) {
+                return result;
+            }
+        }
+        return Option.none();
+    }
 
     static exists(arry, pred) {
         return this.findIndex(arry, pred).isSome();
@@ -173,6 +187,51 @@ export default class Tools {
             throw new Error(name + " not available on this browser");
         }
         return actual;
+    }
+
+    static generate(cases) {
+        let self = this, constructors = [], adt = {};
+
+        self.each(cases, (acase, count) => {
+            let keys = Object.keys(acase), key = keys[0], value = acase[key];
+
+            constructors.push(key);
+            adt[key] = () => {
+                if (arguments.length !== value.length) {
+                    throw new Error("Wrong number of arguments to case " + key + ". Expected " + value.length + ' (' + value + '), Actual ' + argLength);
+                }
+
+                let args = new Array(arguments.length);
+                for (let i = 0; i < args.length; i++) {
+                    args[i] = arguments[i];
+                }
+
+                return {
+                    fold: () => {
+                        if (arguments.length !== cases.length) {
+                            throw new Error("Wrong number of arguments to fold. Expected " + cases.length + ", Actual " + arguments.length);
+                        }
+                        let target = arguments[count];
+                        return target.apply(null, args);
+                    },
+
+                    match: (branches) => {
+                        let branchKeys = Object.keys(branches);
+                        if (constructors.length !== branchKeys.length) {
+                            throw new Error("Wrong number of arguments to match. Expected: " + constructors.join(',') + ", Actual: " + branchKeys.join(','));
+                        }
+
+                        let allReqd = self.forall(constructors, (reqKey) => self.contains(branchKeys, reqKey));
+                        if (!allReqd) {
+                            throw new Error("Not all branches were specified when using match. Specified: " + branchKeys.join(',') + ', Required: ' + constructors.join(','));
+                        }
+                        return branches[key].apply(null, args);
+                    }
+                };
+            };
+        });
+
+        return adt;
     }
 
     static generateId(prefix) {

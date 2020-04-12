@@ -4,7 +4,6 @@ import NodeType from "../dom/NodeType";
 
 export default class CefUtils {
     static showCaret(direction, editor, node, before, scrollIntoView) {
-        // TODO: Figure out a better way to handle this dependency
         return editor.selectionOverrides.showCaret(direction, node, before, scrollIntoView);
     }
 
@@ -36,7 +35,6 @@ export default class CefUtils {
             return this.showCaret(1, editor, caretPositionBeforeNode, false, false);
         }
 
-        // TODO: Should render caret before/after depending on where you click on the page forces after now
         let ceRoot = editor.dom.getParent(caretPosition.getNode(), (node) => NodeType.isContentEditableFalse(node) || NodeType.isContentEditableTrue(node));
         if (NodeType.isContentEditableFalse(ceRoot)) {
             return this.showCaret(1, editor, ceRoot, false, scrollIntoView);

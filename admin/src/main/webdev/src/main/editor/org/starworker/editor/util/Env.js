@@ -54,11 +54,11 @@ export default class Env {
 
     static get fileApi() { return fileApi; }
     static get ceFalse() { return ie === false || ie > 8; }
-    static get cacheSuffix() { return null; }
     static get container() { return null; }
-    static get overrideViewPort() { return null; }
     static get experimentalShadowDom() { return false; }
     static get canHaveCSP() { return ie === false || ie > 11; }
     static get desktop() { return !phone && !tablet; }
     static get windowsPhone() { return windowsPhone; }
 }
+Env.cacheSuffix = null;
+Env.overrideViewPort = null;

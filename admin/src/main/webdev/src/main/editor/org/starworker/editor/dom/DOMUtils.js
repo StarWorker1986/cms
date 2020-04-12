@@ -267,6 +267,22 @@ export default class DOMUtils {
         return $(elm).hasClass(cls);
     }
 
+    insertAfter(node, reference) {
+        let referenceNode = this.get(reference);
+        return this.run(node, (node) => {
+            let parent, nextSibling;
+            parent = referenceNode.parentNode;
+            nextSibling = referenceNode.nextSibling;
+            if (nextSibling) {
+                parent.insertBefore(node, nextSibling);
+            }
+            else {
+                parent.appendChild(node);
+            }
+            return node;
+        });
+    }
+
     is(elm, selector) {
         if (!elm) {
             return false;
@@ -821,9 +837,16 @@ export default class DOMUtils {
         let dom = element.dom(),
             styles = window.getComputedStyle(dom),
             prop = styles.getPropertyValue(property),
-            isSupported = dom.style !== undefined && Tools.isFunction(dom.style.getPropertyValue),
-            v = (prop === '' && (!this.__isInBody(element) ? (isSupported ? dom.style.getPropertyValue(property) : '') : r));
+            isSupported = (dom.style !== undefined && Tools.isFunction(dom.style.getPropertyValue)),
+            v = (prop === '' && !this.__isInBody(element)) ? (isSupported ? dom.style.getPropertyValue(property) : '') : prop;
         return v === null ? undefined : v;
+    }
+
+    static getRawCss(element, property) {
+        let dom = element.dom(),
+            isSupported = (dom.style !== undefined && Tools.isFunction(dom.style.getPropertyValue)),
+            raw = isSupported ? dom.style.getPropertyValue(property) : '';
+        return Option.from(raw).filter((r) => r.length > 0);
     }
 
     static getDescendant(scope, selector) {
@@ -896,7 +919,6 @@ export default class DOMUtils {
     }
 
     static prevSiblings(element) {
-        // This one needs to be reversed, so they're still in DOM order
         return this.toArray(element, prevSibling).reverse();
     }
 
